@@ -2,6 +2,17 @@ let pursuer1, pursuer2;
 let target;
 let obstacles = [];
 let vehicules = [];
+let enemies = [];
+
+let snakeMode = false;
+
+function preload() {
+  obstacleImage = loadImage('assets/obstacles2.png'); 
+  leaderImage = loadImage('assets/leader1.png');
+  vehicleImage = loadImage('assets/v3.png');
+  enemiesImage = loadImage('assets/enemies.png');
+  console.log('Enemy image loaded:', enemiesImage);
+}
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -15,6 +26,7 @@ function setup() {
   // un cercle de rayon 100px
   // TODO
   obstacles.push(new Obstacle(width / 2, height / 2, 100, "green"));
+  
 }
 
 function draw() {
@@ -25,9 +37,8 @@ function draw() {
 
   // Dessin de la cible qui suit la souris
   // Dessine un cercle de rayon 32px à la position de la souris
-  fill(255, 0, 0);
-  noStroke();
-  circle(target.x, target.y, 32);
+  imageMode(CENTER);
+  image(leaderImage, target.x, target.y, 64, 64);
 
   // dessin des obstacles
   // TODO
@@ -35,13 +46,40 @@ function draw() {
     o.show();
   })
 
-  vehicules.forEach(v => {
-    // pursuer = le véhicule poursuiveur, il vise un point devant la cible
-    v.applyBehaviors(target, obstacles, vehicules);
+  enemies.forEach(enemy => {
+    enemy.applyBehaviors(obstacles, enemies, { pos: target, vel: createVector(0, 0) });
+    enemy.update();
+    enemy.show();
+  });
 
+  //snake behavior
+  vehicules.forEach((v, index) => {
+    if(snakeMode)
+    {
+      if(index === 0){
+        v.applyBehaviors(target, obstacles, vehicules);
+        let vPos = v.arrive(target, 70);
+        v.applyForce(vPos);
+      }
+      else{
+        let leader = vehicules[index-1].pos.copy();
+        v.applyBehaviors(leader, obstacles, vehicules, 70);
+        let vPos = v.arrive(leader, 70)
+        v.applyForce(vPos);
+      }
+      
+    }
+    else{
+      v.applyBehaviors(target, obstacles, vehicules);
+      let vPos = v.arrive(target, 70);
+      v.applyForce(vPos);
+    }
     // déplacement et dessin du véhicule et de la target
     v.update();
     v.show();
+    v.projectilesImpact(enemies);
+    
+
   });
 }
 
@@ -66,4 +104,25 @@ function keyPressed() {
       vehicules.push(v);
     }
   }
+  //a for associe, 
+  else if (key === "a") {
+    let v = new Vehicle(random(width), random(height));
+    vehicules.push(v);
+  }
+  else if (key === "s") {
+    snakeMode = !snakeMode;
+    console.log("Snake Mode:", snakeMode);
+  }
+  else if (key === "e") {
+    for (let i = 0; i < 5; i++) {
+      let enemy = new Enemy(random(width), random(height));
+      enemies.push(enemy);
+    }
+  }
+  else if (key === ' ') {
+    vehicules.forEach(vehicle => {
+      vehicle.shoot(createVector(mouseX, mouseY));
+    });
+  }
+
 }

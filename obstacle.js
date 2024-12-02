@@ -4,7 +4,7 @@ class Obstacle {
     this.r = r;
     this.color = couleur;
   }
-
+/*
   show() {
     push();
     fill(this.color);
@@ -13,6 +13,13 @@ class Obstacle {
     ellipse(this.pos.x, this.pos.y, this.r * 2);
     fill(0);
     ellipse(this.pos.x, this.pos.y, 10);
+    pop();
+  }
+    */
+  show(){
+    push();
+    imageMode(CENTER);
+    image(obstacleImage, this.pos.x, this.pos.y, this.r * 2, this.r * 2);
     pop();
   }
 }

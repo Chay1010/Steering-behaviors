@@ -14,6 +14,35 @@ function findProjection(pos, a, b) {
   return v2;
 }
 
+
+class Projectile {
+  constructor(x, y, direction) {
+    this.pos = createVector(x, y);
+    this.vel = direction.copy().setMag(10);
+    this.r = 5; 
+  }
+
+  update() {
+    this.pos.add(this.vel);
+  }
+
+  show() {
+    fill("yellow");
+    noStroke();
+    ellipse(this.pos.x, this.pos.y, this.r * 2); 
+  }
+
+  isOffScreen() {
+    return (
+      this.pos.x < 0 || this.pos.x > width || this.pos.y < 0 || this.pos.y > height
+    );
+  }
+
+  hits(enemy) {
+    return this.pos.dist(enemy.pos) < this.r + enemy.r; // Collision detection
+  }
+}
+
 class Vehicle {
   static debug = false;
 
@@ -25,9 +54,9 @@ class Vehicle {
     // accélération du véhicule
     this.acc = createVector(0, 0);
     // vitesse maximale du véhicule
-    this.maxSpeed = 6;
+    this.maxSpeed = 10;
     // force maximale appliquée au véhicule
-    this.maxForce = 0.25;
+    this.maxForce = 2;
     this.color = "white";
     // à peu près en secondes
     this.dureeDeVie = 5;
@@ -42,19 +71,46 @@ class Vehicle {
     // chemin derrière vaisseaux
     this.path = [];
     this.pathMaxLength = 30;
+
+    this.projectiles = [];
+    
   }
 
-  // on fait une méthode applyBehaviors qui applique les comportements
-  // seek et avoid
-  applyBehaviors(target, obstacles) {
+  shoot(target) {
+    let direction = p5.Vector.sub(target, this.pos).normalize()
+    this.projectiles.push(new Projectile(this.pos.x, this.pos.y, direction));
+  }
+
+  projectilesImpact(enemies) {
+    for (let i = this.projectiles.length - 1; i >= 0; i--) {
+      let projectile = this.projectiles[i];
+      projectile.update();
+      projectile.show();
+
+      for (let j = enemies.length - 1; j >= 0; j--) {
+        if (projectile.hits(enemies[j])) {
+          enemies.splice(j, 1); // Supprimer l'ennemi touché
+          this.projectiles.splice(i, 1);
+          break;
+        }
+      }
+      // Supprimer les projectiles hors écran
+      if (projectile.isOffScreen()) {
+        this.projectiles.splice(i, 1);
+      }
+    }
+  }
+
+  applyBehaviors(target, obstacles, vehicules, d=0) {
 
     let seekForce = this.arrive(target);
+
     let avoidForce = this.avoid(obstacles);
     let separateForce = this.separate(vehicules);
 
     seekForce.mult(0.2);
-    avoidForce.mult(3);
-    separateForce.mult(0.3);
+    avoidForce.mult(5.0);
+    separateForce.mult(2.0);
 
     this.applyForce(seekForce);
     this.applyForce(avoidForce);
@@ -296,7 +352,7 @@ class Vehicle {
     return closestObstacle;
   }
 
-  arrive(target) {
+  arrive(target, d = 0) {
     // 2nd argument true enables the arrival behavior
     return this.seek(target, true);
   }
@@ -308,7 +364,7 @@ class Vehicle {
       let slowRadius = 100;
       let distance = force.mag();
       if (distance < slowRadius) {
-        desiredSpeed = map(distance, 0, slowRadius, 0, this.maxSpeed);
+        desiredSpeed = map(distance, 70, slowRadius, 0, this.maxSpeed);
       }
     }
     force.setMag(desiredSpeed);
@@ -383,6 +439,27 @@ class Vehicle {
     this.acc.add(force);
   }
 
+  edges() {
+    // Limites horizontales
+    if (this.pos.x > width - this.r) {
+      this.pos.x = width - this.r;
+      this.vel.x *= -1;
+    } else if (this.pos.x < this.r) {
+      this.pos.x = this.r;
+      this.vel.x *= -1;
+    }
+  
+    // Limites verticales
+    if (this.pos.y > height - this.r) {
+      this.pos.y = height - this.r;
+      this.vel.y *= -1;
+    } else if (this.pos.y < this.r) {
+      this.pos.y = this.r;
+      this.vel.y *= -1;
+    }
+  }
+  
+
   update() {
     // on ajoute l'accélération à la vitesse. L'accélération est un incrément de vitesse
     // (accélératiion = dérivée de la vitesse)
@@ -395,6 +472,8 @@ class Vehicle {
 
     // on remet l'accélération à zéro
     this.acc.set(0, 0);
+
+    this.edges();
 
     // mise à jour du path (la trainée derrière)
     this.ajoutePosAuPath();
@@ -419,6 +498,7 @@ class Vehicle {
     this.drawPath();
     // dessin du vehicule
     this.drawVehicle();
+    this.projectilesImpact(enemies)
   }
 
   drawVehicle() {
@@ -440,6 +520,8 @@ class Vehicle {
 
     // Dessin d'un véhicule sous la forme d'un triangle. Comme s'il était droit, avec le 0, 0 en haut à gauche
     triangle(-this.r_pourDessin, -this.r_pourDessin / 2, -this.r_pourDessin, this.r_pourDessin / 2, this.r_pourDessin, 0);
+    //imageMode(CENTER);
+    //image(vehicleImage, 0, 0, this.r_pourDessin * 2, this.r_pourDessin * 2);
     // Que fait cette ligne ?
     //this.edges();
 

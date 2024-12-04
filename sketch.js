@@ -39,6 +39,7 @@ function draw() {
   // changer le dernier param (< 100) pour effets de trainée
   //background(0, 0, 0, 100);
   background(0); // Clear the canvas
+  imageMode(CORNER);
   image(backgroundImage, 0, 0, width, height);
 
   fill(255); // Couleur blanche pour le texte

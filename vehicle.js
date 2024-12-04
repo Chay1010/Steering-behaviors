@@ -15,6 +15,7 @@ function findProjection(pos, a, b) {
 }
 
 
+
 class Projectile {
   constructor(x, y, direction) {
     this.pos = createVector(x, y);
@@ -38,8 +39,21 @@ class Projectile {
     );
   }
 
+  hitsObstacle(obstacle) {
+    return this.pos.dist(obstacle.pos) < this.r + obstacle.r;
+  }
+
+  rebound(obstacle) {
+    let normal = p5.Vector.sub(this.pos, obstacle.pos);
+    normal.normalize();
+
+    let dot = this.vel.dot(normal);
+    let reflection = p5.Vector.sub(this.vel, normal.copy().mult(2 * dot));
+    this.vel = reflection.copy().setMag(this.vel.mag());
+  }
+
   hits(enemy) {
-    return this.pos.dist(enemy.pos) < this.r + enemy.r; // Collision detection
+    return this.pos.dist(enemy.pos) < this.r + enemy.r;
   }
 }
 
@@ -81,7 +95,8 @@ class Vehicle {
     this.projectiles.push(new Projectile(this.pos.x, this.pos.y, direction));
   }
 
-  projectilesImpact(enemies) {
+  projectilesImpact(enemies, obstacles) {
+             
     for (let i = this.projectiles.length - 1; i >= 0; i--) {
       let projectile = this.projectiles[i];
       projectile.update();
@@ -91,6 +106,14 @@ class Vehicle {
         if (projectile.hits(enemies[j])) {
           enemies.splice(j, 1); // Supprimer l'ennemi touché
           this.projectiles.splice(i, 1);
+          break;
+        }
+      }
+      
+      for (let k = obstacles.length - 1; k >= 0; k--) {
+        let obstacle = obstacles[k];
+        if (projectile.hitsObstacle(obstacles[k])) {
+          projectile.rebound(obstacle);
           break;
         }
       }
@@ -386,8 +409,10 @@ class Vehicle {
     let prediction = vehicle.vel.copy();
     prediction.mult(10);
     target.add(prediction);
-    fill(0, 255, 0);
-    circle(target.x, target.y, 16);
+    if(Vehicle.debug){
+      fill(0, 255, 0);
+      circle(target.x, target.y, 16);
+    }
     return this.seek(target);
   }
 
@@ -498,7 +523,7 @@ class Vehicle {
     this.drawPath();
     // dessin du vehicule
     this.drawVehicle();
-    this.projectilesImpact(enemies)
+    this.projectilesImpact(enemies,obstacles)
   }
 
   drawVehicle() {
@@ -519,9 +544,9 @@ class Vehicle {
     rotate(this.vel.heading());
 
     // Dessin d'un véhicule sous la forme d'un triangle. Comme s'il était droit, avec le 0, 0 en haut à gauche
-    triangle(-this.r_pourDessin, -this.r_pourDessin / 2, -this.r_pourDessin, this.r_pourDessin / 2, this.r_pourDessin, 0);
-    //imageMode(CENTER);
-    //image(vehicleImage, 0, 0, this.r_pourDessin * 2, this.r_pourDessin * 2);
+    //triangle(-this.r_pourDessin, -this.r_pourDessin / 2, -this.r_pourDessin, this.r_pourDessin / 2, this.r_pourDessin, 0);
+    imageMode(CENTER);
+    image(vehicleImage, 0, 0, this.r_pourDessin * 2, this.r_pourDessin * 2);
     // Que fait cette ligne ?
     //this.edges();
 
@@ -561,6 +586,7 @@ class Vehicle {
     pop();
   }
   drawVector(pos, v, color) {
+    if(!Vehicle.debug) return;
     push();
     // Dessin du vecteur vitesse
     // Il part du centre du véhicule et va dans la direction du vecteur vitesse

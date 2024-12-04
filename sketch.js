@@ -8,10 +8,10 @@ let snakeMode = false;
 
 function preload() {
   obstacleImage = loadImage('assets/obstacles2.png'); 
-  leaderImage = loadImage('assets/leader1.png');
-  vehicleImage = loadImage('assets/v3.png');
-  enemiesImage = loadImage('assets/enemies.png');
-  console.log('Enemy image loaded:', enemiesImage);
+  leaderImage = loadImage('assets/t11.png');
+  vehicleImage = loadImage('assets/t21.png');
+  enemiesImage = loadImage('assets/ufo3.png');
+  backgroundImage = loadImage('assets/b3.jpg');
 }
 
 function setup() {
@@ -26,12 +26,32 @@ function setup() {
   // un cercle de rayon 100px
   // TODO
   obstacles.push(new Obstacle(width / 2, height / 2, 100, "green"));
-  
+
+  //Creating sliders.
+  sliderSpeed = createSlider(1, 20, 10, 1); // Slider pour la vitesse
+  sliderSpeed.position(200, 20); // Position alignée avec le libellé
+
+  sliderForce = createSlider(0, 10, 2, 0.1); // Slider pour la force
+  sliderForce.position(200, 60);
 }
 
 function draw() {
   // changer le dernier param (< 100) pour effets de trainée
-  background(0, 0, 0, 100);
+  //background(0, 0, 0, 100);
+  background(0); // Clear the canvas
+  image(backgroundImage, 0, 0, width, height);
+
+  fill(255); // Couleur blanche pour le texte
+  textSize(14);
+
+  // Libellés des sliders
+  text("Vitesse maximale :", 10, 35); // Libellé pour le premier slider
+  text("Force maximale :", 10, 75);   // Libellé pour le deuxième slider
+
+  // Valeurs des sliders affichées à droite
+  text(sliderSpeed.value(), 360, 35); // Valeur actuelle du slider de vitesse
+  text(sliderForce.value(), 360, 75);
+  drawMenu();
 
   target = createVector(mouseX, mouseY);
 
@@ -54,6 +74,8 @@ function draw() {
 
   //snake behavior
   vehicules.forEach((v, index) => {
+    v.maxSpeed = sliderSpeed.value();
+    v.maxForce = sliderForce.value();
     if(snakeMode)
     {
       if(index === 0){
@@ -77,10 +99,45 @@ function draw() {
     // déplacement et dessin du véhicule et de la target
     v.update();
     v.show();
-    v.projectilesImpact(enemies);
+    v.projectilesImpact(enemies,obstacles);
     
 
   });
+}
+
+function drawMenu() {
+  fill(50, 50, 50, 200);
+  noStroke();
+  rect(width - 220, 20, 200, 280, 10);
+
+  fill(255);
+  textSize(16);
+  textAlign(LEFT, CENTER);
+  text("Contrôles :", width - 200, 40);
+
+  drawKey("a", "Ajouter un véhicule", 60);
+  drawKey("d", "Activer debug", 100);
+  drawKey("f", "Ajouter 10 véhicules", 140);
+  drawKey("s", "Mode serpent", 180);
+  drawKey("e", "Ajouter des ennemis", 220);
+  drawKey("Space", "Tirer", 260);
+}
+
+function drawKey(key, description, y) {
+  fill(200);
+  stroke(0);
+  strokeWeight(2);
+  rect(width - 200, y, 40, 30, 5);
+
+  fill(0);
+  noStroke();
+  textSize(14);
+  textAlign(CENTER, CENTER);
+  text(key, width - 180, y + 15);
+
+  fill(255); 
+  textAlign(LEFT, CENTER);
+  text(description, width - 150, y + 15);
 }
 
 function mousePressed() {
@@ -114,8 +171,10 @@ function keyPressed() {
     console.log("Snake Mode:", snakeMode);
   }
   else if (key === "e") {
-    for (let i = 0; i < 5; i++) {
-      let enemy = new Enemy(random(width), random(height));
+    for (let i = 0; i < 10; i++) {
+      let x = random(50, width - 50); // Add padding to avoid edge overlap
+      let y = random(50, height - 50);
+      let enemy = new Enemy(x, y);
       enemies.push(enemy);
     }
   }

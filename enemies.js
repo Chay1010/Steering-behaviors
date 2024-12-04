@@ -66,9 +66,8 @@ class Enemy extends Vehicle {
       this.applyForce(evadeForce);
     }
   
-    // Override de la méthode `show` pour changer le visuel
     show() {
-        imageMode(CENTER);
+        imageMode(CORNER);
         image(this.image, this.pos.x, this.pos.y, this.r_pourDessin * 4, this.r_pourDessin * 4);
     }
   }

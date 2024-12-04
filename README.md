@@ -10,13 +10,6 @@ Vehicle Behaviors
         Vehicles follow each other in a snake-like formation. The first vehicle pursues the target, while subsequent vehicles follow the preceding one with a slight delay.
         Key: Press s to toggle snake mode.
 
-    Evade:
-        Vehicles avoid enemies by predicting their future positions based on velocity and dynamically steering away from them.
-        Implementation: Uses a pursuit-prediction mechanism to compute future positions and apply steering forces in the opposite direction.
-
-    Wander:
-        Vehicles move randomly in a natural and smooth way.
-
     Seek and Arrival:
         Vehicles pursue a target (mouse position), slowing down as they approach the target to simulate smooth arrival.
         Implementation: Adjusts velocity magnitude based on the distance from the target.

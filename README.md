@@ -1,6 +1,7 @@
 Project Overview
 
 This project is an interactive simulation featuring vehicles (agents) and enemies with various behaviors. The user can manipulate the simulation via keyboard inputs and sliders, creating dynamic and reactive interactions. The core functionality includes agent behaviors like snake movement, evasion, wandering, shooting, and interaction with obstacles and enemies.
+
 PLAY HERE : https://chay1010.github.io/Steering-behaviors/
 
 Vehicle Behaviors
